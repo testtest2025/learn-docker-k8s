@@ -32,5 +32,5 @@ jobs:
           docker tag my-node-app:${{ github.sha }} your-dockerhub-username/my-node-app:${{ github.sha }}
           docker push your-dockerhub-username/my-node-app:${{ github.sha }}
 
-      - name: Logout of Docker Hub
-        run: docker logout
+      #- name: Logout of Docker Hub
+      #  run: docker logout
