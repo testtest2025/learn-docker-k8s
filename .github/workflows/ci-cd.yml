@@ -1,34 +1,58 @@
 name: CI
 
-
-on: [push]
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+      - develop # Trigger on pushes to the develop branch
+  pull_request:
+    branches:
+      - main # Trigger on pull requests targeting the main branch
+      - develop # Trigger on pull requests targeting the develop branch
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  build:
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Action to check out your repository code
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3 # Recommended action for building Docker images efficiently
 
+      - name: Log in to Docker Hub (Optional, if pushing to Docker Hub)
+        # Only uncomment and configure if you plan to push your image to Docker Hub
+        # uses: docker/login-action@v3
+        # with:
+        #   username: ${{ secrets.DOCKER_USERNAME }} # Create a GitHub secret for DOCKER_USERNAME
+        #   password: ${{ secrets.DOCKER_TOKEN }} # Create a GitHub secret for DOCKER_TOKEN (personal access token)
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.REPO_USER }}
-          password: ${{ secrets.REPO_PWD }}
-
-          
-      - name: Build and push Docker image
+      - name: Build Docker image
+        id: docker_build # Assign an ID to this step to reference its outputs
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: true
-          tags: ${{ secrets.REPO_USER }}/my-app:latest
+          context: ./my-app # Specify the context for the Docker build (your my-app folder)
+          push: false # Set to true if you want to push the image to a registry
+          tags: my-app:latest # Tag your image (e.g., my-app:latest or my-app:${{ github.sha }})
+          # cache-from: type=gha # Optional: Enable GitHub Actions cache for faster builds
+          # cache-to: type=gha,mode=max # Optional: Enable GitHub Actions cache for faster builds
 
+      - name: Run Docker image (Optional: for testing)
+        run: |
+          docker run -d -p 8080:8080 my-app:latest
+          sleep 5 # Give the app a moment to start
+          curl http://localhost:8080
+          docker stop $(docker ps -q --filter ancestor=my-app:latest) # Stop the container after testing
 
-
+      # Example: Push to Docker Hub (Uncomment and configure if needed)
+      # - name: Push Docker image to Docker Hub
+      #   if: github.ref == 'refs/heads/main' # Only push from the main branch
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./my-app
+      #     push: true
+      #     tags: ${{ secrets.DOCKER_USERNAME }}/my-app:latest # Replace DOCKER_USERNAME with your Docker Hub username
+      #     cache-from: type=gha
+      #     cache-to: type=gha,mode=max
         
