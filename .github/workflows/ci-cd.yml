@@ -28,7 +28,7 @@ jobs:
           context: ./my-app
           file: ./my-app/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}lesedisenti/my-app:latest
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/my-app:latest
 
       - name: Image digest
         run: 'echo "Image digest: ${{ steps.docker_build.outputs.digest }}"'
